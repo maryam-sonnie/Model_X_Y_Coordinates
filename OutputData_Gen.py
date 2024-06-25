@@ -11,8 +11,7 @@ from speckle_automate import (
 )
 
 from flatten import flatten_base
-from specklepy import objects
-from specklepy.objects.geometry import Point #Import point to search for points in the flattened base
+
 
 class FunctionInputs(AutomateBase):
     """These are function author defined values.
@@ -23,21 +22,21 @@ class FunctionInputs(AutomateBase):
     """
 
     # an example how to use secret values
-    whisper_message: SecretStr = Field(title="Write something here to test the function inputs")
-    # search_speckle_type: str = Field(
-    #     title="Speckle type to search the model for",
-    #     description=(
-    #         "If a object has the following speckle_type,"
-    #         " it will be counted."
-    #     ),
-    # )
+    whisper_message: SecretStr = Field(title="This is a secret message")
+    forbidden_speckle_type: str = Field(
+        title="Forbidden speckle type",
+        description=(
+            "If a object has the following speckle_type,"
+            " it will be marked with an error."
+        ),
+    )
 
 
 def automate_function(
     automate_context: AutomationContext,
     function_inputs: FunctionInputs,
 ) -> None:
-    """This is a Speckle Automate function to extract the model's Points and their XY coordinates. 
+    """This is an example Speckle Automate function.
 
     Args:
         automate_context: A context helper object, that carries relevant information
@@ -49,23 +48,26 @@ def automate_function(
     # the context provides a conveniet way, to receive the triggering version
     version_root_object = automate_context.receive_version()
 
-    objects_with_search_speckle_type = [
+    objects_with_forbidden_speckle_type = [
         b
         for b in flatten_base(version_root_object)
-        if b.speckle_type == Point
+        if b.speckle_type == function_inputs.forbidden_speckle_type
     ]
-    count = len(objects_with_search_speckle_type)
+    count = len(objects_with_forbidden_speckle_type)
 
     if count > 0:
         # this is how a run is marked with a failure cause
-        automate_context.attach_result_to_objects(
-            category="Point Types",
-            # object_ids=[o.id for o in objects_with_search_speckle_type if o.id],
-            message=f"This model has {count} Point data objects present."
+        automate_context.attach_error_to_objects(
+            category="Forbidden speckle_type"
+            " ({function_inputs.forbidden_speckle_type})",
+            object_ids=[o.id for o in objects_with_forbidden_speckle_type if o.id],
+            message="This project should not contain the type: "
+            f"{function_inputs.forbidden_speckle_type}",
         )
-        automate_context.mark_run_success(
-            "Automation successfully run: "
-            f"Found {count} Points in the model"
+        automate_context.mark_run_failed(
+            "Automation failed: "
+            f"Found {count} object that have one of the forbidden speckle types: "
+            f"{function_inputs.forbidden_speckle_type}"
         )
 
         # set the automation context view, to the original model / version view
@@ -73,7 +75,7 @@ def automate_function(
         automate_context.set_context_view()
 
     else:
-        automate_context.mark_run_success("No Point types found in the model.")
+        automate_context.mark_run_success("No forbidden types found.")
 
     # if the function generates file results, this is how it can be
     # attached to the Speckle project / model
