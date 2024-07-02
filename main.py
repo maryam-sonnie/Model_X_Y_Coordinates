@@ -13,6 +13,7 @@ from speckle_automate import (
 from flatten import flatten_base
 from specklepy import objects
 from specklepy.objects.geometry import Point #Import point to search for points in the flattened base
+import pandas as pd
 
 class FunctionInputs(AutomateBase):
     """These are function author defined values.
@@ -56,6 +57,7 @@ def automate_function(
     ]
     count = len(objects_with_search_speckle_type)
 
+
     if count > 0:
         # this is how a run is marked with a failure cause
         automate_context.attach_result_to_objects(
@@ -63,6 +65,23 @@ def automate_function(
             # object_ids=[o.id for o in objects_with_search_speckle_type if o.id],
             message=f"This model has {count} Point data objects present."
         )
+
+        df = pd.DataFrame()
+
+        df['Point_Number'] = None
+        df['X-Coordinate'] = None
+        df['Y-Coordinate'] = None
+        
+        for i in range(0, count):
+            point = objects_with_search_speckle_type[i]
+            df.loc[i, 'Point_Number'] = i
+            df.loc[i, 'X-Coordinate'] = point.x
+            df.loc[i, 'Y-Coordinate'] = point.y
+
+        excel_file_path = 'Model_Coordinates.xlsx'
+        df.to_excel(excel_file_path, index=False)
+        automate_context.store_file_result("./Model_Coordinates.xlsx")
+
         automate_context.mark_run_success(
             "Automation successfully run: "
             f"Found {count} Points in the model"
