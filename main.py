@@ -14,6 +14,7 @@ from flatten import flatten_base
 from specklepy import objects
 from specklepy.objects.geometry import Point #Import point to search for points in the flattened base
 import pandas as pd
+import os
 
 class FunctionInputs(AutomateBase):
     """These are function author defined values.
@@ -47,6 +48,11 @@ def automate_function(
             It also has conveniece methods attach result data to the Speckle model.
         function_inputs: An instance object matching the defined schema.
     """
+    """Most likely don't need to add this to the published function.
+    FOR TESTING PURPOSES ONLY."""
+    
+    certificate = './cacert.crt'
+    os.environ['CURL_CA_BUNDLE'] = certificate
     # the context provides a conveniet way, to receive the triggering version
     version_root_object = automate_context.receive_version()
 
