@@ -51,8 +51,8 @@ def automate_function(
     """Most likely don't need to add this to the published function.
     FOR TESTING PURPOSES ONLY."""
     
-    certificate = './cacert.crt'
-    os.environ['CURL_CA_BUNDLE'] = certificate
+    custom_cert_path = os.getenv("SSL_CERTIFICATE")
+    os.environ['CURL_CA_BUNDLE'] = custom_cert_path
     # the context provides a conveniet way, to receive the triggering version
     version_root_object = automate_context.receive_version()
 
